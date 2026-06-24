@@ -6,6 +6,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
+import java.util.List;
 
 @Service
 @Transactional
@@ -15,15 +17,18 @@ public class OrderService {
     private final CustomerRepository customerRepository;
     private final ProductRepository productRepository;
     private final OrderItemRepository orderItemRepository;
+    private final OrderStatusHistoryRepository orderStatusHistoryRepository;
 
     public OrderService(OrderRepository orderRepository,
                         CustomerRepository customerRepository,
                         ProductRepository productRepository,
-                        OrderItemRepository orderItemRepository) {
+                        OrderItemRepository orderItemRepository,
+                        OrderStatusHistoryRepository orderStatusHistoryRepository) {
         this.orderRepository = orderRepository;
         this.customerRepository = customerRepository;
         this.productRepository = productRepository;
         this.orderItemRepository = orderItemRepository;
+        this.orderStatusHistoryRepository = orderStatusHistoryRepository;
     }
 
     public Order createOrder(Long customerId) {
@@ -87,24 +92,30 @@ public class OrderService {
             total = total.add(item.getUnitPrice().multiply(BigDecimal.valueOf(item.getQuantity())));
         }
 
+        OrderStatus oldStatus = order.getStatus();
         order.setTotalPrice(total);
         order.setStatus(OrderStatus.CONFIRMED);
-        return orderRepository.save(order);
+        Order saved = orderRepository.save(order);
+        saveHistory(saved, oldStatus, OrderStatus.CONFIRMED);
+        return saved;
     }
 
     public Order cancelOrder(Long orderId) {
         Order order = getOrderById(orderId);
-        if (order.getStatus() == OrderStatus.CONFIRMED) {
+        OrderStatus oldStatus = order.getStatus();
+        if (oldStatus == OrderStatus.CONFIRMED) {
             for (OrderItem item : order.getItems()) {
                 Product product = item.getProduct();
                 product.setStockQuantity(product.getStockQuantity() + item.getQuantity());
                 productRepository.save(product);
             }
-        } else if (order.getStatus() != OrderStatus.DRAFT) {
-            throw new RuntimeException("Cannot cancel order with status: " + order.getStatus());
+        } else if (oldStatus != OrderStatus.DRAFT) {
+            throw new RuntimeException("Cannot cancel order with status: " + oldStatus);
         }
         order.setStatus(OrderStatus.CANCELLED);
-        return orderRepository.save(order);
+        Order saved = orderRepository.save(order);
+        saveHistory(saved, oldStatus, OrderStatus.CANCELLED);
+        return saved;
     }
 
     public Order updateOrderStatus(Long orderId, String status) {
@@ -118,11 +129,26 @@ public class OrderService {
         } else {
             throw new RuntimeException("Invalid status transition: " + current + " -> " + next);
         }
-        return orderRepository.save(order);
+        Order saved = orderRepository.save(order);
+        saveHistory(saved, current, next);
+        return saved;
     }
 
     public Order getOrderById(Long orderId) {
         return orderRepository.findById(orderId)
                 .orElseThrow(() -> new RuntimeException("Order not found"));
+    }
+
+    public List<OrderStatusHistory> getOrderHistory(Long orderId) {
+        return orderStatusHistoryRepository.findByOrderOrdId(orderId);
+    }
+
+    private void saveHistory(Order order, OrderStatus oldStatus, OrderStatus newStatus) {
+        OrderStatusHistory history = new OrderStatusHistory();
+        history.setOrder(order);
+        history.setOldStatus(oldStatus.name());
+        history.setNewStatus(newStatus.name());
+        history.setChangedAt(LocalDateTime.now());
+        orderStatusHistoryRepository.save(history);
     }
 }

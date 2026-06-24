@@ -1,7 +1,10 @@
 package com.Invetory.mangment.Inventory.Order.Management.controller;
 
 import com.Invetory.mangment.Inventory.Order.Management.entity.Order;
+import com.Invetory.mangment.Inventory.Order.Management.entity.OrderStatusHistory;
 import com.Invetory.mangment.Inventory.Order.Management.service.OrderService;
+
+import java.util.List;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
@@ -71,5 +74,11 @@ public class OrderController {
     public ResponseEntity<Order> getOrder(@PathVariable Long orderId) {
         Order order = orderService.getOrderById(orderId);
         return ResponseEntity.ok(order);
+    }
+
+    @GetMapping("/{orderId}/history")
+    public ResponseEntity<List<OrderStatusHistory>> getOrderHistory(@PathVariable Long orderId) {
+        List<OrderStatusHistory> history = orderService.getOrderHistory(orderId);
+        return ResponseEntity.ok(history);
     }
 }

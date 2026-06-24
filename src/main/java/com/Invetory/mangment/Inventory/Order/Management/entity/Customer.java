@@ -1,5 +1,6 @@
 package com.Invetory.mangment.Inventory.Order.Management.entity;
 
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
@@ -18,13 +19,22 @@ public class Customer {
     private Long cusId;
 
     @NotBlank
-    private String name;
+    @Column(name = "first_name")
+    private String firstName;
+
+    @NotBlank
+    @Column(name = "last_name")
+    private String lastName;
 
     @NotBlank
     @Email
     @Column(unique = true)
     private String email;
 
-    @OneToMany(mappedBy = "customer")
+    @JsonManagedReference
+    @OneToMany(mappedBy = "customer", cascade = CascadeType.ALL)
     private List<Order> orders;
+
+    @OneToMany(mappedBy = "customer")
+    private List<CustomerPhone> phones;
 }

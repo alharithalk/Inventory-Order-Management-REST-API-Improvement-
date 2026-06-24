@@ -1,5 +1,6 @@
 package com.Invetory.mangment.Inventory.Order.Management.entity;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
@@ -17,8 +18,9 @@ public class OrderItem {
     @Column(name = "OrdItem_id")
     private Long ordItemId;
 
+    @JsonBackReference
     @ManyToOne
-    @JoinColumn(name = "Ord_id")
+    @JoinColumn(name = "Ord_id", nullable = false)
     private Order order;
 
     @ManyToOne

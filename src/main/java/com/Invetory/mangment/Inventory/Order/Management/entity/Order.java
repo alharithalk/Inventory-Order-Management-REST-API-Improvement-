@@ -1,5 +1,7 @@
 package com.Invetory.mangment.Inventory.Order.Management.entity;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.Data;
 
@@ -17,8 +19,9 @@ public class Order {
     @Column(name = "Ord_id")
     private Long ordId;
 
+    @JsonBackReference
     @ManyToOne
-    @JoinColumn(name = "Cus_id")
+    @JoinColumn(name = "Cus_id", nullable = false)
     private Customer customer;
 
     @Enumerated(EnumType.STRING)
@@ -28,6 +31,7 @@ public class Order {
 
     private LocalDateTime createdAt = LocalDateTime.now();
 
-    @OneToMany(mappedBy = "order", cascade = CascadeType.ALL)
+    @JsonManagedReference
+    @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
     private List<OrderItem> items;
 }

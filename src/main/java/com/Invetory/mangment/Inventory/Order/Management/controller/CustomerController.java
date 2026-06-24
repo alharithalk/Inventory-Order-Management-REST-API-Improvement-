@@ -1,6 +1,7 @@
 package com.Invetory.mangment.Inventory.Order.Management.controller;
 
 import com.Invetory.mangment.Inventory.Order.Management.entity.Customer;
+import com.Invetory.mangment.Inventory.Order.Management.entity.CustomerPhone;
 import com.Invetory.mangment.Inventory.Order.Management.entity.Order;
 import com.Invetory.mangment.Inventory.Order.Management.service.CustomerService;
 import com.Invetory.mangment.Inventory.Order.Management.service.OrderService;
@@ -27,15 +28,24 @@ public class CustomerController {
     @Data
     static class CustomerRequest {
         @NotBlank
-        private String name;
+        private String firstName;
+        @NotBlank
+        private String lastName;
         @NotBlank
         @Email
         private String email;
     }
 
+    @Data
+    static class PhoneRequest {
+        @NotBlank
+        private String phoneNumber;
+    }
+
     @PostMapping
     public ResponseEntity<Customer> createCustomer(@Valid @RequestBody CustomerRequest request) {
-        Customer customer = customerService.createCustomer(request.getName(), request.getEmail());
+        Customer customer = customerService.createCustomer(
+                request.getFirstName(), request.getLastName(), request.getEmail());
         return ResponseEntity.status(HttpStatus.CREATED).body(customer);
     }
 
@@ -43,5 +53,12 @@ public class CustomerController {
     public ResponseEntity<Order> createOrder(@PathVariable Long customerId) {
         Order order = orderService.createOrder(customerId);
         return ResponseEntity.status(HttpStatus.CREATED).body(order);
+    }
+
+    @PostMapping("/{customerId}/phones")
+    public ResponseEntity<CustomerPhone> addPhone(@PathVariable Long customerId,
+                                                   @Valid @RequestBody PhoneRequest request) {
+        CustomerPhone phone = customerService.addPhone(customerId, request.getPhoneNumber());
+        return ResponseEntity.status(HttpStatus.CREATED).body(phone);
     }
 }

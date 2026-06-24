@@ -1,5 +1,6 @@
 package com.Invetory.mangment.Inventory.Order.Management.entity;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
@@ -30,7 +31,8 @@ public class Product {
     @Column(name = "stock_quantity")
     private Integer stockQuantity;
 
+    @JsonBackReference
     @ManyToOne
-    @JoinColumn(name = "Cat_id")
+    @JoinColumn(name = "Cat_id", nullable = false)
     private Category category;
 }
